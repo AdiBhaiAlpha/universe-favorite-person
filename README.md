@@ -37,8 +37,9 @@ Output goes to `dist/`.
 
 ## URLs
 
-- GitHub repository: (added after push)
-- Production: (added after deploy)
+- GitHub repository: https://github.com/AdiBhaiAlpha/universe-favorite-person
+- Production: https://the-universe-has-a-fav-person.vercel.app
+- Example observation: https://the-universe-has-a-fav-person.vercel.app/?name=Sayantika
 
 ## Notes
 
