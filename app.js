@@ -87,12 +87,7 @@
   let lineStart = 0;
   let dimAmount = 0; // 0 full, 1 dimmed for final
   let currentName = '';
-  let observationsCompleted = 0;
-  let returningObserver = false;
   let letterOpen = false;
-  let lastFocus = null;
-  try { returningObserver = window.localStorage.getItem('uly-observed') === '1'; }
-  catch { /* storage unavailable */ }
 
   // Confession letters — deterministic pick by name seed. {name} is interpolated.
   const LETTERS = [
@@ -388,7 +383,6 @@
     letterP2.textContent = fillName(L[1], name);
     letterP3.textContent = fillName(L[2], name);
     input.value = name;
-    lastFocus = document.activeElement;
     letterVeil.hidden = false;
     // next frame so the fade/rise transition plays
     requestAnimationFrame(() => requestAnimationFrame(() => {
@@ -405,12 +399,12 @@
     letterVeil.classList.remove('is-open');
     letterVeil.hidden = true;
     document.body.classList.remove('no-scroll');
-    show('landing');
-    input.focus({ preventScroll: true });
+    // the letter is the finale — closing returns to the final screen beneath it
+    if (phase === 'dimmed' && currentName) show('final');
+    document.getElementById('final-line').focus({ preventScroll: true });
   }
 
-  function beginObservation(rawName, opts) {
-    const force = !!(opts && opts.force);
+  function beginObservation(rawName) {
     const name = sanitizeName(rawName);
     if (!name) {
       hint.textContent = 'Please enter a name — even a nickname will do.';
@@ -418,19 +412,13 @@
       return;
     }
     hint.textContent = '';
+    currentName = name;
     // reflect in URL without reload
     try {
       const u = new URL(window.location.href);
       u.searchParams.set('name', name);
       window.history.replaceState({}, '', u.toString());
     } catch { /* ignore */ }
-
-    // Second (or later) observation — no repeat sky show; a letter arrives instead.
-    if (!force && (observationsCompleted > 0 || returningObserver)) {
-      openLetter(name);
-      return;
-    }
-    currentName = name;
 
     // reset constellation state
     clearTimers();
@@ -502,11 +490,12 @@
   function goFinal() {
     if (!currentName) return;
     phase = 'dimmed';
-    observationsCompleted += 1;
-    try { window.localStorage.setItem('uly-observed', '1'); }
-    catch { /* storage unavailable */ }
     show('final');
     document.getElementById('final-line').focus({ preventScroll: true });
+    // Finale: once the final line has lingered, the confession letter arrives.
+    later(() => {
+      if (phase === 'dimmed' && currentName && !letterOpen) openLetter(currentName);
+    }, reducedMotion.matches ? 3500 : 6000);
   }
 
   function restart() {
@@ -552,12 +541,11 @@
   letterKeep.addEventListener('click', closeLetter);
   letterX.addEventListener('click', closeLetter);
   letterObserve.addEventListener('click', () => {
-    const name = currentName;
     letterOpen = false;
     letterVeil.classList.remove('is-open');
     letterVeil.hidden = true;
     document.body.classList.remove('no-scroll');
-    beginObservation(name, { force: true });
+    restart();
   });
   letterVeil.addEventListener('click', (e) => {
     if (e.target === letterVeil) closeLetter();
