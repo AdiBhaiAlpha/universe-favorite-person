@@ -26,6 +26,7 @@
   const catalogLine = document.getElementById('catalog-line');
   const scienceLine = document.getElementById('science-line');
   const scienceLine2 = document.getElementById('science-line-2');
+  const continueBtn = document.getElementById('continue-btn');
   const restartBtn = document.getElementById('restart-btn');
   const shareBtn = document.getElementById('share-btn');
   const copiedMsg = document.getElementById('copied-msg');
@@ -492,10 +493,6 @@
     phase = 'dimmed';
     show('final');
     document.getElementById('final-line').focus({ preventScroll: true });
-    // Finale: once the final line has lingered, the confession letter arrives.
-    later(() => {
-      if (phase === 'dimmed' && currentName && !letterOpen) openLetter(currentName);
-    }, reducedMotion.matches ? 3500 : 6000);
   }
 
   function restart() {
@@ -536,6 +533,9 @@
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     beginObservation(input.value);
+  });
+  continueBtn.addEventListener('click', () => {
+    if (currentName && !letterOpen) openLetter(currentName);
   });
   restartBtn.addEventListener('click', restart);
   letterKeep.addEventListener('click', closeLetter);

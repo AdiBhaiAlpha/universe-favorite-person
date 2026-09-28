@@ -211,7 +211,8 @@ body {
   font-size: clamp(1.5rem, 4.6vw, 2.4rem); line-height: 1.4;
   margin: 0 0 40px; text-wrap: balance; color: var(--ink);
 }
-.final-actions { display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.final-actions { display: flex; flex-direction: column; align-items: center; gap: 18px; }
+.final-sub { display: flex; align-items: center; justify-content: center; gap: 6px 22px; flex-wrap: wrap; }
 .linklike { background: none; border: none; color: var(--faint); font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; cursor: pointer; padding: 8px; }
 .linklike:hover { color: var(--ink-dim); }
 .copied { font-family: var(--mono); font-size: 11px; color: var(--cool); min-height: 1.4em; }

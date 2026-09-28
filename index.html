@@ -94,8 +94,14 @@
       <p class="eyebrow eyebrow--dim" id="final-kicker">Final exposure</p>
       <h2 id="final-line" class="final-line" tabindex="-1">Maybe the universe knows something I haven&rsquo;t said yet.</h2>
       <div class="final-actions">
-        <button type="button" class="btn btn--ghost" id="restart-btn">Observe another person</button>
-        <button type="button" class="linklike" id="share-btn">Copy observation link</button>
+        <button type="button" class="btn btn--primary" id="continue-btn">
+          <span>Continue</span>
+          <span class="btn__arrow" aria-hidden="true">→</span>
+        </button>
+        <div class="final-sub">
+          <button type="button" class="linklike" id="restart-btn">Observe another person</button>
+          <button type="button" class="linklike" id="share-btn">Copy observation link</button>
+        </div>
         <span class="copied" id="copied-msg" role="status" aria-live="polite"></span>
       </div>
     </section>

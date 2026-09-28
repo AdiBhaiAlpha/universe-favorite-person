@@ -44,6 +44,6 @@ Output goes to `dist/`.
 ## Notes
 
 - `?name=Sayantika` pre-fills the observation.
-- Finale: after the full animation (status → constellation → science → final line) finishes and lingers, a sealed confession letter pops up automatically as the last beat. Closing it returns to the final screen; the letter offers "Observe another person" to restart.
+- Finale: after the full animation (status → constellation → science → final line), a "Continue →" button opens a sealed confession letter as the last beat. Closing it returns to the final screen; restart stays available as a subtle link.
 - Respects `prefers-reduced-motion` (static placement, no travel animation).
 - Restart via "Observe another person" — no page reload, timers/frames cleaned.
