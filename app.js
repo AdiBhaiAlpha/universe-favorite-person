@@ -31,6 +31,15 @@
   const copiedMsg = document.getElementById('copied-msg');
   const coordsEl = document.getElementById('coords');
   const clockEl = document.getElementById('clock');
+  const letterVeil = document.getElementById('letter-veil');
+  const letterDear = document.getElementById('letter-dear');
+  const letterSeal = document.getElementById('letter-seal');
+  const letterP1 = document.getElementById('letter-p1');
+  const letterP2 = document.getElementById('letter-p2');
+  const letterP3 = document.getElementById('letter-p3');
+  const letterKeep = document.getElementById('letter-keep');
+  const letterObserve = document.getElementById('letter-observe');
+  const letterX = document.getElementById('letter-x');
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
@@ -78,6 +87,31 @@
   let lineStart = 0;
   let dimAmount = 0; // 0 full, 1 dimmed for final
   let currentName = '';
+  let observationsCompleted = 0;
+  let returningObserver = false;
+  let letterOpen = false;
+  let lastFocus = null;
+  try { returningObserver = window.localStorage.getItem('uly-observed') === '1'; }
+  catch { /* storage unavailable */ }
+
+  // Confession letters — deterministic pick by name seed. {name} is interpolated.
+  const LETTERS = [
+    [
+      'I pointed the telescope at the sky and asked it to find you. It did not hesitate — as if it had been keeping your coordinates all along.',
+      'Here is my honest finding: ordinary days bend a little toward you. The walk home feels shorter, small things feel lighter, and the stars seem oddly pleased with themselves.',
+      'I am done pretending this is astronomy. This is a confession wearing a lab coat. {name} — you are the favorite person, and I am simply the observer who finally said it.',
+    ],
+    [
+      'The first observation was science. This one is not. The telescope is switched off — this is just me, writing plainly.',
+      'I have checked the data twice: nearly every good day has your fingerprints on it. That cannot be a coincidence, so I have stopped calling it one.',
+      'Consider this my published result, on the record: {name}, you are loved — deliberately, and without further review.',
+    ],
+    [
+      'You were never supposed to read the field notes. But the universe kept filing you under “favorite”, and keeping that secret started to feel dishonest.',
+      'What I know is this: the sky rearranged itself for you without a single complaint — which is more than I can say for myself, since I have been rearranging my sentences around you for months.',
+      'So, plainly: {name}, I love the way the world leans toward you. And I would like to lean that way too.',
+    ],
+  ];
   let currentSeed = 0;
   let timeBase = performance.now();
 
@@ -340,7 +374,43 @@
     return `ULY-${n} · mag ${mag} · field ${8 + (seed % 5)} stars`;
   }
 
-  function beginObservation(rawName) {
+  function fillName(s, name) {
+    return s.split('{name}').join(name);
+  }
+
+  function openLetter(name) {
+    currentName = name;
+    const seed = hashSeed(name);
+    const L = LETTERS[seed % LETTERS.length];
+    letterDear.textContent = 'Dear ' + name + ',';
+    letterSeal.textContent = (name.trim()[0] || '–').toUpperCase();
+    letterP1.textContent = fillName(L[0], name);
+    letterP2.textContent = fillName(L[1], name);
+    letterP3.textContent = fillName(L[2], name);
+    input.value = name;
+    lastFocus = document.activeElement;
+    letterVeil.hidden = false;
+    // next frame so the fade/rise transition plays
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      letterVeil.classList.add('is-open');
+    }));
+    letterOpen = true;
+    document.body.classList.add('no-scroll');
+    letterDear.focus({ preventScroll: true });
+  }
+
+  function closeLetter() {
+    if (!letterOpen) return;
+    letterOpen = false;
+    letterVeil.classList.remove('is-open');
+    letterVeil.hidden = true;
+    document.body.classList.remove('no-scroll');
+    show('landing');
+    input.focus({ preventScroll: true });
+  }
+
+  function beginObservation(rawName, opts) {
+    const force = !!(opts && opts.force);
     const name = sanitizeName(rawName);
     if (!name) {
       hint.textContent = 'Please enter a name — even a nickname will do.';
@@ -348,13 +418,19 @@
       return;
     }
     hint.textContent = '';
-    currentName = name;
     // reflect in URL without reload
     try {
       const u = new URL(window.location.href);
       u.searchParams.set('name', name);
       window.history.replaceState({}, '', u.toString());
     } catch { /* ignore */ }
+
+    // Second (or later) observation — no repeat sky show; a letter arrives instead.
+    if (!force && (observationsCompleted > 0 || returningObserver)) {
+      openLetter(name);
+      return;
+    }
+    currentName = name;
 
     // reset constellation state
     clearTimers();
@@ -426,11 +502,20 @@
   function goFinal() {
     if (!currentName) return;
     phase = 'dimmed';
+    observationsCompleted += 1;
+    try { window.localStorage.setItem('uly-observed', '1'); }
+    catch { /* storage unavailable */ }
     show('final');
     document.getElementById('final-line').focus({ preventScroll: true });
   }
 
   function restart() {
+    if (letterOpen) {
+      letterOpen = false;
+      letterVeil.classList.remove('is-open');
+      letterVeil.hidden = true;
+      document.body.classList.remove('no-scroll');
+    }
     clearTimers();
     currentName = '';
     lineProgress = 0;
@@ -464,6 +549,40 @@
     beginObservation(input.value);
   });
   restartBtn.addEventListener('click', restart);
+  letterKeep.addEventListener('click', closeLetter);
+  letterX.addEventListener('click', closeLetter);
+  letterObserve.addEventListener('click', () => {
+    const name = currentName;
+    letterOpen = false;
+    letterVeil.classList.remove('is-open');
+    letterVeil.hidden = true;
+    document.body.classList.remove('no-scroll');
+    beginObservation(name, { force: true });
+  });
+  letterVeil.addEventListener('click', (e) => {
+    if (e.target === letterVeil) closeLetter();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (!letterOpen) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closeLetter();
+      return;
+    }
+    if (e.key === 'Tab') {
+      // light focus trap inside the dialog
+      const f = letterVeil.querySelectorAll('button');
+      if (!f.length) return;
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
   shareBtn.addEventListener('click', async () => {
     const name = currentName || sanitizeName(input.value) || '';
     let url = window.location.href;

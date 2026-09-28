@@ -44,5 +44,6 @@ Output goes to `dist/`.
 ## Notes
 
 - `?name=Sayantika` pre-fills the observation.
+- The second (and later) observation in a browser that already completed one opens a sealed confession letter instead of replaying the sky. "Observe the sky again" inside the letter replays the full animation on demand.
 - Respects `prefers-reduced-motion` (static placement, no travel animation).
 - Restart via "Observe another person" — no page reload, timers/frames cleaned.
